@@ -28,3 +28,11 @@ Homestead.json
 .env.production
 .phpactor.json
 auth.json
+composer.json
+composer.lock
+phpunit.xml
+package-lock.json
+storage/logs/laravel.log
+bootstrap/cache/packages.php
+/bootstrap/cache
+package-lock.json
