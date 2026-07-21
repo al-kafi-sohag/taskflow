@@ -9,14 +9,24 @@ export default {
         './resources/views/**/*.blade.php',
         './resources/js/**/*.vue',
     ],
-
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Inter', ...defaultTheme.fontFamily.sans],
+            },
+            colors: {
+                primary: {
+                    50: '#EEF2FF',
+                    100: '#E0E7FF',
+                    500: '#6D5AFF',
+                    600: '#4F39F6',
+                    700: '#4028D6',
+                },
+            },
+            borderRadius: {
+                xl2: '16px',
             },
         },
     },
-
     plugins: [forms],
 };
