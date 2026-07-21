@@ -123,4 +123,6 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'db_transaction_attemps' => env('DB_TRANSACTION_ATTEMPTS', 3),
+
 ];

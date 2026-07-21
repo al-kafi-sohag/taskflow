@@ -18,6 +18,7 @@ use Illuminate\Notifications\Notifiable;
 
 #[Fillable(['name', 'email', 'password', 'otp_code', 'otp_expires_at', 'google_id'])]
 #[Hidden(['password', 'remember_token'])]
+#[UseFactory(UserFactory::class)]
 
 class User extends Authenticatable implements MustVerifyEmail
 {

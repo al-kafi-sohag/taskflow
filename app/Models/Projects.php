@@ -3,17 +3,21 @@
 namespace App\Models;
 
 use App\Enums\ProjectStatus;
+use Database\Factories\ProjectsFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 #[Fillable(['title', 'slug', 'description', 'status'])]
+#[UseFactory(ProjectsFactory::class)]
 
 class Projects extends BaseModel
 {
-    use SoftDeletes, HasSlug;
+    use HasFactory, SoftDeletes, HasSlug;
 
     protected function casts(): array
     {
