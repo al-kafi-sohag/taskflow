@@ -31,7 +31,7 @@ enum TaskStatus:int
         };
     }
 
-    public function default(): TaskStatus
+    public static function default(): self
     {
         return self::TO_DO;
     }

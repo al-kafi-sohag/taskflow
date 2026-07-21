@@ -29,7 +29,7 @@ enum TaskPriority:int
         };
     }
 
-    public function default(): TaskPriority
+    public static function default(): self
     {
         return self::MEDIUM;
     }
