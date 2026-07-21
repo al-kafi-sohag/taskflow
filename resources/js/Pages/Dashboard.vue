@@ -1,30 +1,33 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
+
+const page = usePage();
+const firstName = computed(() => page.props.auth.user?.name?.split(' ')[0] ?? '');
 </script>
 
 <template>
-    <Head title="Dashboard" />
-
-    <AuthenticatedLayout>
-        <template #header>
-            <h2
-                class="text-xl font-semibold leading-tight text-gray-800"
-            >
-                Dashboard
-            </h2>
-        </template>
-
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+    <AppLayout
+        title="Dashboard"
+        :subtitle="`Good morning, ${firstName} — here's what's happening`"
+    >
+        <div class="space-y-6">
+            <!-- KPI cards row -->
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div
-                    class="overflow-hidden bg-white shadow-sm sm:rounded-lg"
+                    v-for="n in 4"
+                    :key="n"
+                    class="rounded-2xl border border-slate-200 bg-white p-5"
                 >
-                    <div class="p-6 text-gray-900">
-                        You're logged in!
-                    </div>
+                    <!-- TODO: KPI card content (icon, trend badge, value, label) -->
                 </div>
             </div>
+
+            <!-- Task table -->
+            <div class="rounded-2xl border border-slate-200 bg-white">
+                <!-- TODO: table header (search/filter), rows, pagination -->
+            </div>
         </div>
-    </AuthenticatedLayout>
+    </AppLayout>
 </template>
