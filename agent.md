@@ -102,6 +102,181 @@ Database
 
 ---
 
+
+# 4A. Models
+
+All Eloquent models live in `app/Models`. Two structural conventions apply
+project-wide:
+
+1. **Laravel 13 attributes** are used instead of protected properties for
+   model configuration (`#[Fillable]`, `#[Hidden]`, `#[Table]`,
+   `#[UseFactory]`, etc.) — see `bootstrap/app.php` / Laravel 13 changelog
+   for the full attribute list.
+2. **`BaseModel`** (`app/Models/BaseModel.php`) is the shared parent for
+   models that need standard audit relationships. It does **not** add
+   soft deletes, casts, or fillable fields on its own — those are still
+   declared per-model. It only provides:
+
+```php
+   creator()  // belongsTo(User::class, 'created_by')
+   updater()  // belongsTo(User::class, 'updated_by')
+   deleter()  // belongsTo(User::class, 'deleted_by')
+```
+
+   Any model with `created_by` / `updated_by` / `deleted_by` columns
+   should extend `BaseModel` rather than `Model` directly.
+
+---
+
+## 4A.1 `User`
+
+- Extends `Authenticatable` (not `BaseModel` — auth models stay on
+  Laravel's base user class).
+- `#[Fillable]` / `#[Hidden]` via attributes; no `protected $fillable`.
+- Casts: `email_verified_at`, `otp_expires_at` → `datetime`;
+  `password` → `hashed`; `status` → `UserStatus` enum.
+- Custom email verification flow via `OtpService` (overrides
+  `sendEmailVerificationNotification()`).
+- Traits: `HasFactory`, `Notifiable`, `SoftDeletes`.
+
+**Relationships**
+| Method | Type | Target |
+|---|---|---|
+| `createdTasks()` | `hasMany` | `Task` (via `created_by`) |
+| `assignedTasks()` | `belongsToMany` | `Task` (via `task_assignees` pivot, using `TaskAssignee`) |
+
+---
+
+## 4A.2 `Task`
+
+- Extends `BaseModel`.
+- Implements `HasMedia` (Spatie Media Library) — one collection:
+  `attachments`, registered via `registerMediaCollections()`.
+- Slug via Spatie `HasSlug` — generated from `title`, saved to `slug`,
+  **not** regenerated on update (`doNotGenerateSlugsOnUpdate()`), so a
+  task's slug/URL stays stable even if the title is edited later.
+- Casts: `status` → `TaskStatus` enum, `priority` → `TaskPriority` enum,
+  `due_date` + timestamps → `datetime`.
+- Traits: `SoftDeletes`, `HasSlug`, `InteractsWithMedia`.
+
+**Relationships**
+| Method | Type | Target |
+|---|---|---|
+| `assignees()` | `belongsToMany` | `User` (via `task_assignees`, using `TaskAssignee`) |
+| `tags()` | `belongsToMany` | `Tag` (via `task_tags`, using `TaskTag`) |
+| `projects()` | `belongsToMany` | `Projects` (via `task_projects`, using `TaskProject`) |
+| `creator()` / `updater()` / `deleter()` | `belongsTo` | `User` (inherited from `BaseModel`) |
+
+**Attaching a file to a task:**
+```php
+$task->addMedia($request->file('attachment'))
+     ->toMediaCollection('attachments');
+```
+
+---
+
+## 4A.3 `Projects`
+
+- Extends `BaseModel`.
+- Slug via `HasSlug` (same pattern as `Task`: from `title`, not
+  regenerated on update).
+- Casts: `status` → `ProjectStatus` enum.
+- Traits: `SoftDeletes`, `HasSlug`.
+
+**Relationships**
+| Method | Type | Target |
+|---|---|---|
+| `tasks()` | `belongsToMany` | `Task` (via `task_projects`, using `TaskProject`) |
+| `creator()` / `updater()` / `deleter()` | `belongsTo` | `User` (inherited from `BaseModel`) |
+
+> Note: class name is `Projects` (plural) to match the existing file —
+> table is inferred as `projects`, which is correct, but this is an
+> intentional deviation from Eloquent's singular-class convention.
+
+---
+
+## 4A.4 `Tag`
+
+- Extends `Model` directly (**not** `BaseModel` — see note above;
+  this means `Tag` currently has no `creator()`/`updater()`/`deleter()`
+  helpers, unlike every other content model).
+- Slug via `HasSlug` (from `title`).
+- Casts: `status` → `TagStatus` enum.
+- Traits: `SoftDeletes`, `HasSlug`.
+
+**Relationships**
+| Method | Type | Target |
+|---|---|---|
+| `tasks()` | `belongsToMany` | `Task` (via `task_tags`, using `TaskTag`) |
+
+---
+
+## 4A.5 Pivot Models
+
+`task_assignees`, `task_tags`, and `task_projects` are **not** plain
+Eloquent pivot tables — each has its own auto-increment `id`,
+`timestamps`, and `SoftDeletes`, so each has a dedicated Pivot model
+(extending `Illuminate\Database\Eloquent\Relations\Pivot`, not `Model`)
+and is wired into its parent `belongsToMany()` calls via `->using()`.
+
+| Pivot Model | Table | Links | Fillable |
+|---|---|---|---|
+| `TaskAssignee` | `task_assignees` | `Task` ↔ `User` | `task_id`, `user_id` |
+| `TaskTag` | `task_tags` | `Task` ↔ `Tag` | `task_id`, `tag_id` |
+| `TaskProject` | `task_projects` | `Task` ↔ `Projects` | `task_id`, `project_id` |
+
+Each pivot model:
+- Sets `public $incrementing = true;` (required since these pivots have
+  a real auto-increment `id`, unlike Laravel's default composite-key
+  pivot behavior).
+- Uses `SoftDeletes`.
+- Exposes `task()` / `user()` / `tag()` / `project()` `belongsTo()`
+  accessors for direct pivot-row queries (e.g. auditing who was
+  assigned/unassigned over time), plus `creator()` / `updater()` /
+  `deleter()`.
+
+**Why dedicated Pivot models instead of a plain `belongsToMany`
+without `->using()`:** without `using(TaskAssignee::class)`, Laravel
+would return a generic `Pivot` instance that knows nothing about
+`SoftDeletes` — deleting a `task_assignees` row would hard-delete it
+regardless of the migration's `softDeletes()` column. `->using()` is
+what makes soft-deleting an assignment/tag/project link actually work.
+
+---
+
+## 4A.6 Model Summary Table
+
+| Model | Table | Base | Slug | Media | Soft Deletes |
+|---|---|---|---|---|---|
+| `User` | `users` | `Authenticatable` | – | – | ✅ |
+| `Task` | `tasks` | `BaseModel` | ✅ | ✅ (`attachments`) | ✅ |
+| `Projects` | `projects` | `BaseModel` | ✅ | – | ✅ |
+| `Tag` | `tags` | `Model` ⚠️ | ✅ | – | ✅ |
+| `TaskAssignee` | `task_assignees` | `Pivot` | – | – | ✅ |
+| `TaskTag` | `task_tags` | `Pivot` | – | – | ✅ |
+| `TaskProject` | `task_projects` | `Pivot` | – | – | ✅ |
+
+⚠️ = inconsistent with the rest of the codebase — see 4A.4.
+
+---
+
+## 4A.7 Open Items / Follow-ups
+
+- [ ] Make `Tag extends BaseModel` for consistency with `Task` /
+      `Projects` (adds `creator()`/`updater()`/`deleter()`).
+- [ ] Add composite unique indexes on all three pivot tables
+      (`task_id`+`user_id`, `task_id`+`tag_id`, `task_id`+`project_id`)
+      to prevent duplicate links — not yet present in migrations.
+- [ ] Add indexes on `tasks.status`, `tasks.priority`, `tasks.due_date`,
+      and `users.status` — filters/sorts in `TaskService` will full-scan
+      without them.
+- [ ] Decide whether `created_by`/`updated_by`/`deleted_by` should be
+      auto-populated (e.g. via a model observer or the `AuditColumnsTrait`
+      on save) rather than left for controllers/services to set manually.
+
+
+---
+
 # 5. Folder Structure
 
 resources/js/
