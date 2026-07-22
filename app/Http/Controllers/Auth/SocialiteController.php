@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\OtpService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -12,6 +13,11 @@ use Laravel\Socialite\Socialite;
 
 class SocialiteController extends Controller
 {
+    public function __construct(
+        private OtpService $otpService
+    ) {
+    }
+
     public function redirect(string $provider): RedirectResponse
     {
         return Socialite::driver($provider)->redirect();
@@ -37,11 +43,16 @@ class SocialiteController extends Controller
                 'email' => $socialUser->getEmail(),
                 'google_id' => $socialUser->getId(),
                 'password' => Hash::make(Str::random(32)),
-                'email_verified_at' => now(),
             ]);
         }
 
         Auth::login($user, remember: true);
+
+        if (! $user->hasVerifiedEmail()) {
+            $this->otpService->issue($user);
+
+            return redirect()->route('verification.notice');
+        }
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

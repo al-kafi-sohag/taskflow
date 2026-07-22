@@ -21,10 +21,10 @@ class OtpVerificationNotification extends Notification
     {
         return (new MailMessage)
             ->subject('Your TaskFlow verification code')
-            ->greeting('An OTP has been requested for your account')
-            ->line('Your verification code is:')
-            ->line("**{$this->code}**")
-            ->line('This code expires in 10 minutes.')
-            ->line('If you did not request this, please ignore this email.');
+            ->view('emails.otp-verification', [
+                'code' => $this->code,
+                'name' => $notifiable->name ?? null,
+                'expiresInMinutes' => 10,
+            ]);
     }
 }
