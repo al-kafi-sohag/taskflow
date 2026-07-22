@@ -159,6 +159,16 @@ project-wide:
   `due_date` + timestamps → `datetime`.
 - Traits: `SoftDeletes`, `HasSlug`, `InteractsWithMedia`.
 
+- Status/priority filters resolve via `TaskStatus::tryFrom()` /
+  `TaskPriority::tryFrom()` against the enums' int backing values.
+- Filter dropdown options come from `TaskStatus::options()` /
+  `TaskPriority::options()`, passed from `DashboardController::index()`
+  as Inertia props and forwarded into `TaskTable.vue`.
+- `StatusBadge.vue` / `PriorityBadge.vue` render whatever `label()`
+  and `badge()` the enum returns — no colors are hardcoded in Vue,
+  only the (purely cosmetic) icon-per-status mapping in
+  `StatusBadge.vue`.
+
 **Relationships**
 | Method | Type | Target |
 |---|---|---|

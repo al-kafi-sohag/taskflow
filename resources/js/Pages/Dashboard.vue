@@ -1,7 +1,13 @@
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import TaskTable from '@/Components/TaskTable.vue';
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
+
+defineProps({
+    statusOptions: { type: Array, default: () => [] },
+    priorityOptions: { type: Array, default: () => [] },
+});
 
 const page = usePage();
 const firstName = computed(() => page.props.auth.user?.name?.split(' ')[0] ?? '');
@@ -25,9 +31,12 @@ const firstName = computed(() => page.props.auth.user?.name?.split(' ')[0] ?? ''
             </div>
 
             <!-- Task table -->
-            <div class="rounded-2xl border border-slate-200 bg-white">
-                <!-- TODO: table header (search/filter), rows, pagination -->
-            </div>
+            <TaskTable
+                data-url="/dashboard/tasks"
+                :per-page="8"
+                :status-options="statusOptions"
+                :priority-options="priorityOptions"
+            />
         </div>
     </AppLayout>
 </template>

@@ -25,8 +25,8 @@ const page = usePage();
 const navItems = [
     {
         label: 'Dashboard',
-        href: route('dashboard'),
-        active: () => route().current('dashboard'),
+        href: route('d.index'),
+        active: () => route().current('d.index'),
         icon: LayoutDashboard,
     },
     {
@@ -87,7 +87,7 @@ const initials = computed(() => {
             class="flex h-16 shrink-0 items-center border-b border-slate-200 px-4"
             :class="collapsed ? 'lg:justify-center lg:px-0' : 'justify-between'"
         >
-            <Link :href="route('dashboard')" class="flex items-center gap-2.5 overflow-hidden">
+            <Link :href="route('d.index')" class="flex items-center gap-2.5 overflow-hidden">
                 <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-primary-600 shadow-sm shadow-primary-100">
                     <ApplicationLogo class="h-4 w-4 fill-current text-white" />
                 </span>

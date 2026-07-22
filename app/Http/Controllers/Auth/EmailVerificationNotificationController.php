@@ -13,11 +13,11 @@ class EmailVerificationNotificationController extends Controller
         private OtpService $otpService
     ) {
     }
-    
+
     public function store(Request $request): RedirectResponse
     {
         if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended(route('dashboard', absolute: false));
+            return redirect()->intended(route('d.index', absolute: false));
         }
 
         $this->otpService->issue($request->user());

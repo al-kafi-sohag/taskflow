@@ -18,3 +18,12 @@ if (! function_exists('generateOtp')) {
         return (string) random_int($min, $max);
     }
 }
+
+
+
+if (! function_exists('user')) {
+    function user()
+    {
+        return auth()->user();
+    }
+}
