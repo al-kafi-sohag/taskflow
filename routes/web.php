@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\User\DashboardController;
+use App\Http\Controllers\User\MyTaskController;
+use App\Http\Controllers\User\ProjectController;
+use App\Http\Controllers\User\TaskController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -28,6 +31,36 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::controller(DashboardController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/tasks', 'tasksData')->name('tasks');
+        });
+    });
+
+    Route::group(['as' => 'mt.', 'prefix' => 'my-tasks'], function () {
+        Route::controller(MyTaskController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/tasks', 'tasksData')->name('tasks');
+        });
+    });
+
+    Route::group(['as' => 'tasks.', 'prefix' => 'tasks'], function () {
+        Route::controller(TaskController::class)->group(function () {
+            Route::get('/form-options', 'formOptions')->name('form-options');
+            Route::post('/', 'store')->name('store');
+            Route::get('/{task}', 'show')->name('show');
+            Route::get('/{task}/edit', 'edit')->name('edit');
+            Route::put('/{task}', 'update')->name('update');
+            Route::delete('/{task}', 'destroy')->name('destroy');
+        });
+    });
+
+    Route::group(['as' => 'p.', 'prefix' => 'projects'], function () {
+        Route::controller(ProjectController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/', 'store')->name('store');
+            Route::get('/{project}/edit', 'edit')->name('edit');
+            Route::get('/{project}/tasks', 'tasksData')->name('tasks');
+            Route::put('/{project}', 'update')->name('update');
+            Route::delete('/{project}', 'destroy')->name('destroy');
+            Route::get('/{project}', 'show')->name('show');
         });
     });
 });
