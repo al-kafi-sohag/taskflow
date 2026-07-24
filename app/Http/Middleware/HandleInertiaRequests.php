@@ -4,6 +4,8 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use App\Services\ProjectService;
+use App\Services\TaskService;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -34,6 +36,8 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'sidebarProjects' => fn () => $request->user() ? app(ProjectService::class)->getActiveProjectsForSidebar() : [],
+            'myTasksCount' => fn () => $request->user() ? app(TaskService::class)->getMyActiveTasksCount() : 0,
         ];
     }
 }

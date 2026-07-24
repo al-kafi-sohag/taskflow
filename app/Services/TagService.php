@@ -15,7 +15,7 @@ class TagService
             $tag->title = $data['title'];
             $tag->description = $data['description'] ?? null;
             $tag->status = $data['status'] ?? TagStatus::default();
-            $tag->created_by = auth()->id();
+            $tag->created_by = user()->id;
             $tag->save();
 
             return $tag;

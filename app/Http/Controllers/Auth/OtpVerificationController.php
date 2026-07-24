@@ -17,7 +17,7 @@ class OtpVerificationController extends Controller
         $user = $request->user();
 
         if ($user->hasVerifiedEmail()) {
-            return redirect()->intended(route('dashboard', absolute: false));
+            return redirect()->intended(route('d.index', absolute: false));
         }
 
         if (! $otp->verify($user, $request->code)) {
@@ -29,6 +29,6 @@ class OtpVerificationController extends Controller
         $user->forceFill(['email_verified_at' => now()])->save();
         $otp->clear($user);
 
-        return redirect()->intended(route('dashboard', absolute: false).'?verified=1');
+        return redirect()->intended(route('d.index', absolute: false).'?verified=1');
     }
 }

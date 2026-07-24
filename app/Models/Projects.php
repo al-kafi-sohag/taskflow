@@ -37,6 +37,11 @@ class Projects extends BaseModel
             ->doNotGenerateSlugsOnUpdate();
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
     public function tasks(): BelongsToMany
     {
         return $this->belongsToMany(Task::class, 'task_projects', 'project_id', 'task_id')
